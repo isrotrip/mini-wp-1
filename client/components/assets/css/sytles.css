@@ -1,0 +1,14 @@
+* {
+  padding:0px;
+  margin:0px;
+}
+
+.picture-box {
+  width:100%;
+  height:100%;
+}
+
+.tag-bar {
+  max-width: 100vw;  
+  overflow-x: scroll;
+}

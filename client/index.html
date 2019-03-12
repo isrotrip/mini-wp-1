@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Mini Wordpress</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <link rel="stylesheet" href="./components/assets/css/sytles.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.11/summernote-bs4.css" rel="stylesheet">
+  
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.11/summernote-bs4.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.8/dist/vue.js"></script>
+</head>
+<body>
+
+  <div id="app">
+    <div>
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="#" @click.prevent="position = home">Mini Wordpress</a>
+        <a class="navbar-brand" href="#" @click.prevent="position = create">Create</a>
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#login-modal">
+          Login
+        </button>
+  
+        <div class="modal fade" id="login-modal" tabindex="-1" role="dialog" aria-labelledby="loginModalLable" aria-hidden="true">
+          <div class="modal-dialog" role="document">
+            <form @submit.prevent="login">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="loginModel">Login</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <input type="text" placeholder="Enter Email" required v-model="email"> <br>
+                  <input type="password" placeholder="Enter Password" required v-model="password"> <br>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                  <button type="submit" class="btn btn-primary">Login</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#register-modal">
+          Register
+        </button>
+    
+        <div class="modal fade" id="register-modal" tabindex="-1" role="dialog" aria-labelledby="registerModalLable" aria-hidden="true">
+          <div class="modal-dialog" role="document">
+            <form @submit.prevent="register">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLabel">Register</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <form @submit.prevent="register">
+                  <input type="text" placeholder="Enter Username" required v-model="name"> <br>
+                  <input type="text" placeholder="Enter Email" required v-model="email"> <br>
+                  <input type="password" placeholder="Enter Password" required v-model="password"> <br>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                  <button type="submit" class="btn btn-primary">Register</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <form class="form-inline my-2 my-lg-0">
+          <input class="form-control mr-sm-2" type="search" placeholder="Search Article..." aria-label="Search">
+          <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+        </form>
+      </nav>
+    </div>
+    <div v-if="isLogin === true">
+      <div>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark tag-bar">
+          <form class="form-inline my-2 my-lg-0">
+            <div class="input-group-append">
+              <input class="form-control mr-sm-2" type="search" placeholder="Search Tag..." aria-label="Search">
+              <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+            </div>
+          </form>
+          <a v-for="(tag, index) in tags" class="navbar-brand" href="#" :id="index">{{tag}}</a>
+        </nav>
+      </div>
+      <div
+        v-if="position === 'create' || position === 'update'">
+        <form @submit.prevent="sumbit">
+          {{ position }}
+          <div class="form-group">
+            <label for="create-title">Title:</label>
+            <input type="text" class="form-control" id="create-title">
+          </div>
+          <div class="form-group">
+            <label for="create-tags">Tags:</label>
+            <input type="text" class="form-control" id="create-tags">
+          </div>
+          <form>
+            <textarea id="summernote" name="editordata"></textarea>
+          </form>
+          <button
+            type="submit"
+            class="btn btn-default"
+            @click.prevent="$emit('change-position', 'home')">
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="btn btn-default">
+            Submit
+          </button>
+        </form>
+      </div>        
+
+      <div
+        v-if="position === 'home'"
+        v-for="(article, index) in articles">
+        <div class="container col-9 mx-auto">
+          <div class="card">
+            <div class="row">
+              <div class="col-3">
+                <img :src="article.picture" class="picture-box">
+              </div>
+              <div class="col-6">
+                <div class="card-header row">
+                  <div class="col-4 mx-auto">Title: {{article.title}}</div>
+                  <div class="col-4 mx-auto">Tags: {{article.tag}}</div>
+                  <div class="col-4 mx-auto">Author: {{article.author}}</div>
+                  <div class="col-4 mx-auto">Author: {{article.created_at}}</div>
+                </div>
+                <div class="card-body">Content</div> 
+                <div class="card-footer">
+                  <a class="navbar-brand" href="#" @click.prevent="$emit('update-post', article)">Update</a>
+                  <button type="button" class="btn" data-toggle="modal" data-target="#warning">Delete</button>
+                  <div id="warning" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <button type="button" class="close" data-dismiss="modal" style="display:none">&times;</button>
+                          <h4 class="modal-title">Are You Sure Want To Delete This Content?</h4>
+                        </div>
+                        <div class="modal-body">
+                          <p>{{article.title}}</p>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+                          <button type="button" class="btn btn-default" data-dismiss="modal">Yes</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div v-if="isLogin == false">
+        Silahkan Login
+      </div>
+    </div>
+  </div>
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.js"></script>
+
+  <!-- modal component -->
+  <script src="./setup.js"></script>
+
+  <script src="./app.js"></script>
+</body>
+</html>
