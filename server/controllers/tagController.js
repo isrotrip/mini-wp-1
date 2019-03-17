@@ -4,16 +4,20 @@ class TagController {
 
   static read(req, res) {
     Tag
-      .create({
-        name: req.body.name,
-        articleId: req.params.articleId
-      })
-      .then(tag => {
-        let successMessage = {
-          message: `Tag with name ${tag.name} has beend added successfully`,
-          data: tag
+      .find({})
+      .then(tags => {
+        if(tags) {
+          let successMessage = {
+            message: "Tag Found",
+            tags: tags
+          }
+          res.status(200).json(successMessage)
+        } else {
+          res.status(200).json({
+            message: "Tag Not Found",
+            tags: []
+          })
         }
-        res.status(201).json(successMessage)
       })
       .catch(error => {
         res.status(500).json({

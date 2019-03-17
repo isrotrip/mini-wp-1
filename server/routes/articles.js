@@ -1,9 +1,25 @@
 const express = require('express');
 const router = express.Router();
-const UserController = require('../controllers/userController');
+const ArticleControlller = require('../controllers/articleController');
+const images = require('../middlewares/image')
+const { authorization } = require('../middlewares/verivy')
 
-/* GET users listing. */
-router.post('/login', UserController.login);
-router.post('/register', UserController.register);
+router.post('/',
+  images.multer.single('image'),
+  images.sendUploadToGCS,
+  ArticleControlller.create
+)
+
+router.get('/', ArticleControlller.read)
+
+router.put('/:id',
+  authorization, 
+  images.multer.single('image'),
+  images.sendUploadToGCS,
+  ArticleControlller.update)
+
+router.delete('/:id',
+  authorization,
+  ArticleControlller.delete)
 
 module.exports = router;

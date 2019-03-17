@@ -6,10 +6,6 @@ const articleSchema =  new Schema({
     type: String,
     required: true
   },
-  descriptions: {
-    type: String,
-    required: true
-  },
   tags: [{
     type: Schema.Types.ObjectId,
     ref: 'Tag'
@@ -24,6 +20,10 @@ const articleSchema =  new Schema({
   userId: {
     type: Schema.Types.ObjectId,
     ref: 'User',
+    required: true
+  },
+  created_at: {
+    type: Date,
     required: true
   }
 });

@@ -1,89 +1,99 @@
 const Article = require('../models/article');
-const Tag = require('../models/tag');
+const tagDevider = require('../helpers/tagDevider');
+const tagCounter = require('../helpers/tagCounter');
+const checkTagChanges = require('../helpers/checkTagChanges');
 
 class ArticleController {
 
   static create(req, res) {
-    let makeTagUnique = [];
-    let objectTag = {};
-    req.body.tags.split(' ').forEach(tag => {
-      objectTag[tag] = 0
-    });
-    makeTagUnique = Object.keys(objectTag);
-    let newArticle = {}
-    let newTags = []
-    Article
-      .create({
-        title: req.body.title,
-        descriptions: req.body.descriptions,
-        tags: makeTagUnique,
-        content: req.body.content,
-        pictureUrl: req.pictureUrl,
-        userId: req.userLogin._id
+    console.log('test')
+    if(!req.file) {
+      res.status(400).json({
+        message: 'Please input the picture'
       })
-      .then(article => {
-        newArticle = article
-        let tagPromise = null;
-        article.tags.forEach(tag => {
-          tagPromise
-            .push(new Promise((resolve, reject) => {
-              Tag
-                .findOne({
-                  name: tag.name
-                })
-                .then(tag => {
-                  if(tag) {
-                    resolve('')
-                  } else {
-                    resolve(tag)
-                  }
-                })
-                .catch(error => {
-                  reject(error)
-                })    
-          }))
-        })
-        return Promise.all(tagPromise)
-          .then(tag => {
-            newTags.push(tag)
-            Tag.create({
-              name: tag.name
-            })
+    } else {
+      let promiseTags = tagDevider(req.body.tags);
+      let allTags = [];
+      let sendTags = [];
+      let articleDefault = {};
+      console.log(promiseTags)
+      Promise
+        .all(promiseTags)
+        .then(tags => {
+          tags.forEach(tag => {
+            allTags.push(tag._id)
+            sendTags.push(tag)
           })
-      })
-      .then(status => {
-        res.json(201).json({
-          message: `Article with name ${newArticle.name}`,
-          newArticle: newArticle,
-          newTags: newTags 
+          return Article
+            .create({
+              title: req.body.title,
+              tags: allTags,
+              content: req.body.content,
+              pictureUrl: req.file.cloudStoragePublicUrl,
+              userId: req.userLogin._id,
+              created_at: new Date
+            })
         })
-      })
-      .catch(error => {
-        if(error.message.indexOf('validation') === - 1) {
-          let errorMessage = {
-            message: 'Internal Server Error',
-            full_massage: error
-          }; 
-          res.status(500).json(errorMessage);
-        } else {
-          let errorMessage = {
-            message: error.message,
-            full_massage: error
+        .then(article => {
+          articleDefault = {
+            _id: article._id,
+            title: article.title,
+            tags: sendTags,
+            content: article.content,
+            pictureUrl: article.pictureUrl,
+            created_at: article.created_at,
+            userId: req.userLogin
+          };
+          return tagCounter(article._id, allTags, [])
+        })
+        .then(tagStatus => {
+          let objectStatus = {};
+          tagStatus.forEach(status => {
+            objectStatus = {...objectStatus, ...status}
+          })
+          let successMessage = {
+            message: `Article with title ${articleDefault.title}`,
+            article: articleDefault,
+            tagStatus: objectStatus
           }
-          res.status(400).json(errorMessage)
-        }
-      })
+          res.status(201).json(successMessage);
+        })
+        .catch(error => {
+          console.log(error)
+          if(error.message.indexOf('validation') === - 1) {
+            let errorMessage = {
+              message: 'Internal Server Error',
+              full_massage: error
+            }; 
+            res.status(500).json(errorMessage);
+          } else {
+            let errorMessage = {
+              message: error.message,
+              full_massage: error
+            }
+            res.status(400).json(errorMessage)
+          }
+        })
+    }
   }
 
   static read(req, res) {
     Article
-      .find({
-        userId: req.userLogin._id
-      })
+      .find({})
+      .populate('tags')
+      .populate('userId', '-password')
+      .sort([['created_at', 'descending']])
       .then(articles => {
-        res.status(200).json({
-          data: articles
-        })
+        if(articles) {
+          res.status(200).json({
+            message: 'Found The Article',
+            articles: articles
+          })
+        } else {
+          res.status(200).json({
+            message: 'Article Not Found'
+          })
+        }
       })
       .catch(error => {
         res.status(500).json({
@@ -93,27 +103,55 @@ class ArticleController {
   }
 
   static update(req, res) {
-    Article
-      .findById(req.params.id, {
-        new: true
+    let promiseTags = tagDevider(req.body.tags);
+    let allTags = [];
+    let sendTags = [];
+    let articleDefault = {};
+    Promise
+      .all(promiseTags)
+      .then(tags => {
+        tags.forEach(tag => {
+          allTags.push(tag._id)
+          sendTags.push(tag)
+        })
+        return Article
+          .findById(req.params.id)
       })
       .then(article => {
-        let oldTags = article.tags;
+        let tagChanges = checkTagChanges(article.tags, allTags);
         article.title = req.body.title;
-        article.descriptions = req.body.descriptions;
-        article.tags = req.body.makeTagUnique;
+        article.tags = allTags;
         article.content = req.body.content;
-        article.pictureUrl = req.pictureUrl
-        article.save();
-        let removeFromTags = [];
-        let addFromTags = [];
-        for(let i = 0; i < oldTags.length; i++) {
-          for(let j = 0; j < article.tags.length; j++) {
-            
-          }
+        if(req.file) {
+          article.pictureUrl = req.file.cloudStoragePublicUrl;
         }
+        article.userId = req.userLogin._id;
+        article.created_at = new Date
+        article.save();
+        articleDefault = {
+          _id: article._id,
+          title: article.title,
+          tags: sendTags,
+          content: article.content,
+          pictureUrl: article.pictureUrl,
+          created_at: article.created_at,
+          userId: req.userLogin
+        }
+        return tagCounter(article._id, tagChanges.added, tagChanges.deleted)
+      })
+      .then(tagStatus => {
+        let objectStatus = {};
+        tagStatus.forEach(status => {
+          objectStatus = {...objectStatus, ...status}
+        })
+        res.status(200).json({
+          message: `Successfully update article with title ${articleDefault.title}`,
+          article: articleDefault,
+          tagStatus: objectStatus
+        })
       })
       .catch(error => {
+        console.log(error)
         res.status(500).json({
           message: error.message
         })
@@ -121,7 +159,30 @@ class ArticleController {
   }
 
   static delete(req, res) {
-    
+    let deletedArticle = {}
+    Article
+      .findByIdAndDelete(req.params.id)
+      .then(article => {
+        deletedArticle = article;
+        return tagCounter(article._id, [], article.tags)
+      })
+      .then(tagStatus => {
+        let objectStatus = {};
+        tagStatus.forEach(status => {
+          objectStatus = {...objectStatus, ...status}
+        })
+        res.status(200).json({
+          message: `Successfully delete article with title`,
+          article: deletedArticle,
+          tagStatus: objectStatus
+        })
+      })
+      .catch(error => {
+        console.log(error)
+        res.status(500).json({
+          message: error.message
+        })
+      })
   }
 
 }

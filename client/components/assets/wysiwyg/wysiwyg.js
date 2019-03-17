@@ -13,5 +13,6 @@ Vue.component('wysiwyg', {
       tabsize: 2,
       height: 100
     });
+    $('#summernote').summernote("code", this.text);
   }
 })

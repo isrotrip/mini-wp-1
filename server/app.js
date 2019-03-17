@@ -9,7 +9,7 @@ const { authentication } = require('./middlewares/verivy');
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 const articlesRouter = require('./routes/articles');
-// const tagsRouter = require('./routes/tags');
+const tagsRouter = require('./routes/tags');
 
 const app = express();
 app.use(cors());
@@ -26,6 +26,6 @@ app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use(authentication);
 app.use('/articles', articlesRouter);
-// app.use('/tags', tagsRouter);
+app.use('/tags', tagsRouter);
 
 module.exports = app;
