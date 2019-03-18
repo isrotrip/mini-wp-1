@@ -49,7 +49,6 @@ Vue.component('login', {
           this.password = '';
         })
         .catch(({ data }) => {
-          console.log(data)
           this.isLogin = false
         })
     }

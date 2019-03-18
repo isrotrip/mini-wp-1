@@ -3,7 +3,6 @@ const Tag = require('../models/tag');
 module.exports = (tags) => {
   let makeTagUnique = [];
   let objectTag = {};
-  console.log(tags)
   tags
     .split(',')
     .forEach(tag => {

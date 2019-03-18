@@ -4,209 +4,68 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Mini Wordpress</title>
+  <title>My Wordpress</title>
+  <!-- bootstrap & style -->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
   <link rel="stylesheet" href="./components/assets/css/sytles.css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+  <!-- summernote -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.11/summernote-bs4.css" rel="stylesheet">
+  <!-- swal -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@8"></script>
   
-  <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.js"></script>
+  <!-- boostrap & summernote -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.11/summernote-bs4.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vue@2.6.8/dist/vue.js"></script>
+  
+
 </head>
 <body>
 
   <div id="app">
     <!-- navbar -->
+    <my-navbar
+      :user-info="userInfo"
+      :sign-form="signForm"
+      @login="login($event)"
+      @register="register"
+      @change-page="changePage($event)"
+      @logout="logout"
+      @filter="filter($event)"
+      @cancel-form="cancelForm"
+      @show-tag="toggleTag">
+    </my-navbar>
     <div>
-      <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <a class="navbar-brand" href="#" @click.prevent="click('home')">Mini Wordpress</a>
-        <a class="navbar-brand" href="#" @click.prevent="page = 'create'">Create</a>
 
-        <!-- login -->
-        <button v-if="!userInfo.isLogin" type="button" class="btn btn-primary" data-toggle="modal" data-target="#login-modal">
-          Login
-        </button>
-  
-        <div class="modal fade" id="login-modal" tabindex="-1" role="dialog" aria-labelledby="loginModalLable" aria-hidden="true">
-          <div class="modal-dialog" role="document">
-            <form @submit.prevent="login">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title" id="loginModel">Login</h5>
-                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                  </button>
-                </div>
-                <div class="modal-body">
-                  <input type="text" placeholder="Enter Email" required v-model="signForm.email"> <br>
-                  <input type="password" placeholder="Enter Password" required v-model="signForm.password"> <br>
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                  <button type="submit" class="btn btn-primary">Login</button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
+      <!-- tag bar -->
+      <my-tagbar
+        v-if="showTag"
+        :tags="tags"
+        :name-tags="nameTags"
+        @filter="filter($event)">
+      </my-tagbar>
 
-        <!-- register -->
-        <button  v-if="!userInfo.isLogin" type="button" class="btn btn-primary" data-toggle="modal" data-target="#register-modal">
-          Register
-        </button>
-    
-        <div class="modal fade" id="register-modal" tabindex="-1" role="dialog" aria-labelledby="registerModalLable" aria-hidden="true">
-          <div class="modal-dialog" role="document">
-            <form @submit.prevent="register">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title" id="exampleModalLabel">Register</h5>
-                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                  </button>
-                </div>
-                <div class="modal-body">
-                  <form @submit.prevent="register">
-                  <input type="text" placeholder="Enter Username" required v-model="signForm.name"> <br>
-                  <input typ  e="text" placeholder="Enter Email" required v-model="signForm.email"> <br>
-                  <input type="password" placeholder="Enter Password" required v-model="signForm.password"> <br>
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                  <button type="submit" class="btn btn-primary">Register</button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
+      <!-- update & create form -->
+      <default-form
+        :page="page"
+        :crud-form="crudForm"
+        :name-tags="nameTags"
+        @cancel-form="cancelForm"
+        @submit-form="submitForm">
+      </default-form>
 
-        <!-- search form -->
-        <form autocomplete="off" class="form-inline my-2 my-lg-0" @submit.prevent="filter('articles')">
-          <div class="input-group-append">
-            <div class="autocomplete auto-filler">
-              <input id="search-articles" class="form-control mr-sm-2" type="text" placeholder="Search Article..." aria-label="Search" name="searchArticles">
-            </div>
-            <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
-          </div>
-        </form>
-        <div id="my-signin2"></div>
-      </nav>
-    </div>
-    <div v-if="userInfo.isLogin === true">
-      <div>
-        <!-- tag bar -->
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark tag-bar">
-          <!-- search tag  -->
-          <form autocomplete="off" class="form-inline my-2 my-lg-0" @submit.prevent="filter('tags')">
-            <div class="input-group-append">
-              <div class="autocomplete auto-filler">
-                <input id="search-tags" class="form-control mr-sm-2" type="text" placeholder="Search Tags..." aria-label="Search" name="searchArticles">
-              </div>
-              <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
-            </div>
-          </form>
-          <!-- pick tag --> 
-          <button v-for="(tag, index) in tags" type="button" class="btn btn-primary"> {{ tag.name }} <span class="badge badge-mystyle"> {{ tag.articles.length }} </span></button>
-        </nav>
-      </div>
-      <div
-        v-if="page === 'create' || page === 'update'">
-        <form @submit.prevent="sumbitForm">
-          {{ page }}
-          <div class="form-group">
-            <label for="create-title">Title:</label>
-            <input type="text" class="form-control" id="create-title" v-model="crudForm.formTitle">
-          </div>
-          <div class="form-group">
-            <label for="create-tags">Tags:</label>
-            <br>
-              <vue-tags-input
-                v-model="crudForm.formTag"
-                :tags="crudForm.formNameTags"
-                :autocomplete-items="nameTags"
-                @tags-changed="newTags => crudForm.formNameTags = newTags"
-              />
-          </div>
-          <div class="col-md-6">
-            <div class="form-group">
-                <label>Upload Image</label>
-                <div class="input-group">
-                    <span class="input-group-btn">
-                        <span class="btn btn-default btn-file" @click="selectPicture">
-                          Browse… <input type="file" id="imgInp">
-                        </span>
-                    </span>
-                    <input type="text" class="form-control" readonly>
-                </div>
-                <img id='img-upload'/>
-            </div>
-          </div>
-          <wysiwyg
-            :text="crudForm.formText"></wysiwyg>
-          <button
-            type="submit"
-            class="btn btn-default"
-            @click.prevent="cancelForm">
-            Cancel
-          </button>
-          <button
-            type="submit"
-            class="btn btn-default">
-            Submit
-          </button>
-        </form>
-      </div>
-      <div
-        v-if="page === 'home'"
-        v-for="(article, index) in articles">
-        <div class="container col-9 mx-auto">
-          <div class="card">
-            <div class="row">
-              <div class="col-3">
-                <img :src="article.pictureUrl" class="picture-box">
-              </div>
-              <div class="col-6">
-                <div class="card-header row">
-                  <div class="col-4 mx-auto">Title: {{article.title}}</div>
-                  <div class="col-4 mx-auto"> Tags: 
-                    <a href="#" v-for="articleTag in article.tags">{{articleTag.name}}</a>
-                  </div>
-                  <div class="col-4 mx-auto">Author: {{article.userId.name}}</div>
-                  <div class="col-4 mx-auto">Created At: {{article.created_at.slice(0, 10)}}</div>
-                </div>
-                <div class="card-body" v-html="article.content"></div> 
-                <div class="card-footer">
-                  <a class="navbar-brand" href="#" @click.prevent="updateArticle(article)">Update</a>
-                  <button type="button" class="btn" data-toggle="modal" data-target="#warning">Delete</button>
-                  <div id="warning" class="modal fade" role="dialog">
-                    <div class="modal-dialog">
-                      <div class="modal-content">
-                        <div class="modal-header">
-                          <button type="button" class="close" data-dismiss="modal" style="display:none">&times;</button>
-                          <h4 class="modal-title">Are You Sure Want To Delete This Content?</h4>
-                        </div>
-                        <div class="modal-body">
-                          <p>{{article.title}}</p>
-                        </div>
-                        <div class="modal-footer">
-                          <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
-                          <button type="button" class="btn btn-default" data-dismiss="modal" @click="deleteArticle(article)">Yes</button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div v-if="userInfo.isLogin == false">
-        Silahkan Login
-      </div>
+      <!-- article list -->
+      <article-list
+        :articles="articleShow"
+        :page="page"
+        :user-info="userInfo"
+        @update-article="updateArticle($event)"
+        @delete-article="deleteArticle($event)"
+        @filter=filter($event)>
+      </article-list>
     </div>
   </div>
 
@@ -219,12 +78,20 @@
   <!-- google sign in -->
   <script src="https://apis.google.com/js/platform.js"></script>
 
+  <!-- setup -->
   <script src="./setup/setup.js"></script>
   <script src="./setup/googleSetup.js"></script>
   <script src="./components/assets/function/auto-complete.js"></script>
-  <!-- modal component -->
-  <script src="./components/assets/wysiwyg/wysiwyg.js"></script>
 
+  <!-- components -->
+  <script src="./components/assets/wysiwyg/wysiwyg.js"></script>
+  <script src="./components/assets/delete-warning/deleteWarning.js"></script>
+  <script src="./components/assets/navbar/navbar.js"></script>
+  <script src="./components/assets/tagbar/tagbars.js"></script>
+  <script src="./components/assets/default-form/defaultform.js"></script>
+  <script src="./components/assets/article-list/articles.js"></script>
+
+  <!-- main app -->
   <script src="./app.js"></script>
 </body>
 </html>

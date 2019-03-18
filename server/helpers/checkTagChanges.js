@@ -1,6 +1,4 @@
 module.exports = (before, after) => {
-  console.log('beforenya', before)
-  console.log('afternya', after)
   let result = {
     deleted: [],
     added: []
@@ -15,6 +13,5 @@ module.exports = (before, after) => {
       result.added.push(after[i]);
     }
   }
-  console.log(result)
   return result;
 }

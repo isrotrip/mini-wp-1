@@ -2,15 +2,17 @@ const express = require('express');
 const router = express.Router();
 const ArticleControlller = require('../controllers/articleController');
 const images = require('../middlewares/image')
-const { authorization } = require('../middlewares/verivy')
+const { authentication, authorization } = require('../middlewares/verivy')
+
+router.get('/', ArticleControlller.read)
+
+router.use(authentication);
 
 router.post('/',
   images.multer.single('image'),
   images.sendUploadToGCS,
   ArticleControlller.create
 )
-
-router.get('/', ArticleControlller.read)
 
 router.put('/:id',
   authorization, 

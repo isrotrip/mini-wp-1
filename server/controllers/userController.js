@@ -8,50 +8,54 @@ class UserController {
 
   static login (req, res) {
     if(req.body.loginVia === 'google') {
-      if(req.headers.google_token) {
-        let loginUser = googleDecoder(req.headers.google_token);
-        User
-          .find({
-            email: loginUser.email
-          })
-          .then(user => {
-            if(user) {
-              let userInfo = {
-                name: user.name,
-                email: user.email,
-                loginVia: 'google'
-              };
-              let token = jwtConvert.sign(userInfo);
-              let successMessage = {
-                message: `Welcome ${userInfo.name}`,
-                token: token,
-                userInfo: userInfo
-              }
-              res.status(200).json(successMessage);
-            } else {
-              let userInfo = {
-                name: user.name,
-                email: user.email,
-                password: process.env.DUMMY_GOOGLE_PASSWORD,
-                loginVia: 'google'
-              };
-              return User
-                .create(userInfo)
-                .then(user => {
+      if(req.body.google_token) {
+        googleDecoder(req.body.google_token)
+          .then(loginUser => {
+            return User
+              .findOne({
+                email: loginUser.email
+              })
+              .then(user => {
+                if(user) {
                   let userInfo = {
+                    _id: user._id,
                     name: user.name,
                     email: user.email,
-                    loginVia: user.loginVia
+                    loginVia: 'google'
                   };
                   let token = jwtConvert.sign(userInfo);
                   let successMessage = {
                     message: `Welcome ${userInfo.name}`,
                     token: token,
                     userInfo: userInfo
+                  }
+                  res.status(200).json(successMessage);
+                } else {
+                  let userInfo = {
+                    name: loginUser.name,
+                    email: loginUser.email,
+                    password: process.env.DUMMY_GOOGLE_PASSWORD,
+                    loginVia: 'google'
                   };
-                  res.status(201).json(successMessage);
-                })
-            }
+                  return User
+                    .create(userInfo)
+                    .then(user => {
+                      let userInfo = {
+                        _id: user._id,
+                        name: user.name,
+                        email: user.email,
+                        loginVia: user.loginVia
+                      };
+                      let token = jwtConvert.sign(userInfo);
+                      let successMessage = {
+                        message: `Welcome ${userInfo.name}`,
+                        token: token,
+                        userInfo: userInfo
+                      };
+                      res.status(201).json(successMessage);
+                    })
+                }
+              })  
           })
           .catch(error => {
             if(error.message.indexOf('validation') === - 1) {
@@ -68,6 +72,7 @@ class UserController {
               res.status(400).json(errorMessage)
             }
           })
+          
       } else {
         res.status(400).json({
           message: 'Invalid Google Token'
@@ -80,14 +85,14 @@ class UserController {
         })
       } else {
         User
-          .find({
+          .findOne({
             email: req.body.email,
             password: hashPassword(req.body.password)
           })
           .then(user => {
             if(user) {
-              user = user[0]
               let userInfo = {
+                _id: user._id,
                 name: user.name,
                 email: user.email,
                 loginVia: 'website'
@@ -106,7 +111,6 @@ class UserController {
             }
           })
           .catch(error => {
-            console.log(error)
             res.status(500).json({
               message: error.message
             })
@@ -141,7 +145,6 @@ class UserController {
           res.status(201).json(successMessage);
         })
         .catch(error => {
-          console.log(error)
           if(error.message.indexOf('validation') === - 1) {
             let errorMessage = {
               message: 'Internal Server Error',
@@ -162,6 +165,7 @@ class UserController {
 
   static verify (req, res) {
     let userInfo = {
+      _id: req.userLogin._id,
       name: req.userLogin.name,
       email: req.userLogin.email,
       loginVia: req.userLogin.loginVia
@@ -172,7 +176,6 @@ class UserController {
       token: token,
       userInfo: userInfo
     };
-    console.log(successMessage)
     res.status(200).json(successMessage);
   }
 

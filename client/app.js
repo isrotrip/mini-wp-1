@@ -8,8 +8,6 @@ const app = new Vue ({
     nameTags: [],
     page: 'home',
     userInfo: {
-      userName: '',
-      userEmail: '',
       isLogin: false
     },
     crudForm: {
@@ -26,36 +24,20 @@ const app = new Vue ({
       email: '',
       name: '',
       password: ''
-    }
+    },
+    showTag: false
   },
 
   created () {
     if(localStorage.getItem('token')){
       this.verify()
     }
-  },
+    this.getArticles();
+    this.getTags();
 
-  mounted () {
-    gapi.load('auth2', function(){
-      auth2 = gapi.auth2.init({
-        client_id: '813165512440-v1989g1p4nfu00bbbdf7jcm8u75u1bma.apps.googleusercontent.com',
-        cookiepolicy: 'single_host_origin'
-      });
-      this.renderButton();
-    });
   },
 
   watch: {
-    isLogin(val) {
-      if(val === true) {
-        this.getArticles()
-        this.getTags()
-      } else {
-        this.articles = [],
-        this.tags = []
-      }
-    },
-
     tags(tags) {
       this.nameTags = tags.map(tag => tag = { text: tag.name });
     }
@@ -66,11 +48,26 @@ const app = new Vue ({
       this.page = value;
     },
 
-    filter (value = 'all') {
-      if(value === 'all') {
-        this.articleShow = this.articles.slice(0)
-      } else if(value === 'tag') {
-        this.articleShow = this.articles.filter(article => article)
+    toggleTag () {
+      if(this.showTag){
+        this.showTag = false;
+      } else {
+        this.showTag = true;
+      }
+    },
+
+    filter (payload) {
+      if(!payload) {
+        this.articleShow = this.articles.slice(0);
+      }
+      else if(payload.type === 'Article') {
+        this.articleShow = this.articles.filter(article => article.title.toLowerCase().indexOf(payload.value.toLowerCase()) !== -1);
+      } else if(payload.type === 'tags') {
+        if(payload.exact === false){
+          this.articleShow = this.articles.filter(article => article.tags.map(tag => tag.name.toLowerCase().indexOf(payload.value.toLowerCase()) !== -1).includes(true));
+        } else {
+          this.articleShow = this.articles.filter(article => article.tags.map(tag => tag.name.toLowerCase()).indexOf(payload.value.toLowerCase()) !== -1);
+        }
       }
     },
 
@@ -83,15 +80,15 @@ const app = new Vue ({
         })
         .then(({ data }) => {
           this.userInfo = {
+            _id: data.userInfo._id,
             userName: data.userInfo.name,
             userEmail: data.userInfo.email,
             isLogin: true
           }
-          this.getArticles();
-          this.getTags();
         })
-        .catch(({ data }) => {
-          console.log(data)
+        .catch(({ response }) => {
+          SWAL('error', 'Invalid Token');
+          localStorage.removeItem('token')
           this.userInfo.isLogin = false
         })
     },
@@ -104,35 +101,46 @@ const app = new Vue ({
           password: this.signForm.password
         })
         .then(({ data }) => {
-          console.log(data.message)
           $('#register-modal').modal('toggle');
-          this.signForm.concat({
+          this.signForm = {
             name: '',
             email: '',
             password: ''
-          })
+          }
         })
-        .catch(({ data }) => {
-          console.log(data)
+        .catch(({ response }) => {
+          SWAL('error', response.data.message)
         })
     },
 
-    login () {
-      serverApi
-        .post('/users/login', {
+    login (google_token) {
+      let payload = {};
+      if(google_token) {
+        payload = {
+          google_token: google_token,
+          loginVia: 'google'
+        }
+      } else {
+        payload = {
           email: this.signForm.email,
           password: this.signForm.password,
-          loginVia:  'website'
-        })
+          loginVia: 'website'
+        }
+      }
+      serverApi
+        .post('/users/login', payload)
         .then(({ data }) => {
-          console.log(data)
+          (data)
           this.signForm = {
             email: '',
             password: ''
           };
-          $('#login-modal').modal('toggle');
+          if(!google_token) {
+            $('#login-modal').modal('toggle');
+          }
           localStorage.setItem('token', data.token);
           this.userInfo = { 
+            _id: data.userInfo._id,
             userName: data.userInfo.name,
             userEmail: data.userInfo.email,
             isLogin: true
@@ -140,39 +148,20 @@ const app = new Vue ({
           this.getArticles();
           this.getTags();
         })
-        .catch(({ data }) => {
-          console.log(data)
+        .catch(({ response }) => {
+          console.log(response)
+          SWAL('error', response.data.message)
           this.userInfo.isLogin = false
         })
     },
 
     logout () {
+      this.page = 'home'
       localStorage.removeItem('token');
-      this.isLogin = false;
-      let auth2 = gapi.auth2.getAuthInstance();
-      auth2.signOut().then(function () {
-        console.log('User signed out.');
-      });
-    },
-
-    onSuccess(googleUser) {
-      console.log('Logged in as: ' + googleUser.getBasicProfile().getName());
-    },
-
-    onFailure(error) {
-      console.log(error);
-    },
-
-    renderButton() {
-      gapi.signin2.render('my-signin2', {
-        'scope': 'profile email',
-        'width': 240,
-        'height': 50,
-        'longtitle': true,
-        'theme': 'dark',
-        'onsuccess': onSuccess,
-        'onfailure': onFailure
-      });
+      this.userInfo = {
+        isLogin: false
+      };
+      this.filter();
     },
 
     getArticles () {
@@ -188,9 +177,10 @@ const app = new Vue ({
             this.articles
               .map(article => article.title)
           );
+          this.filter();
         })
-        .catch(({ data }) => {
-          console.log(data)
+        .catch(({ response }) => {
+          SWAL('error', response.data.message)
         })
     },
 
@@ -213,12 +203,12 @@ const app = new Vue ({
               .map(tag => tag.name)
           );
         })
-        .catch(({ data }) => {
-          console.log(data)
+        .catch(({ response }) => {
+          // SWAL('error', response.data.message)
         })
     },
 
-    sumbitForm(){
+    submitForm(){
       this.crudForm.formText = $('#summernote').summernote('code');
       let bodyFormData = new FormData();
       bodyFormData.set('title', this.crudForm.formTitle);
@@ -252,9 +242,9 @@ const app = new Vue ({
         }
       })
         .then(({ data }) => {
-          console.log(data)
           if(this.page === 'create') {
             this.articles.unshift(data.article);
+            this.articleShow.unshift(data.article);
             this.getTags();
           } else if(this.page === 'update') {
             this.articles
@@ -269,12 +259,24 @@ const app = new Vue ({
                 this.tags.push(tag);
               }
             })
+            this.articleShow
+              .splice( 
+                ( this.articleShow
+                  .map( article => article._id )
+                  .indexOf( this.idSelected )
+                ), 1);
+            this.articleShow.unshift(data.article);
+            data.article.tags.forEach( tag => {
+              if(this.tags.indexOf(tag) === -1) {
+                this.tags.push(tag);
+              }
+            })
             this.getTags();
           }
           this.cancelForm();
         })
-        .catch(({ data }) => {
-          console.log(data);
+        .catch(({ response }) => {
+          SWAL('error', response.data.message)
         })
     },
 
@@ -289,47 +291,6 @@ const app = new Vue ({
       };
       $('#summernote').summernote('code', '');
       this.page = 'home';
-    },
-
-    selectPicture () {
-      $(document)
-        .on('change', '.btn-file :file', function() {
-        let input = $(this),
-        label = input
-          .val()
-          .replace(/\\/g, '/')
-          .replace(/.*\//, '');
-        input
-          .trigger('fileselect', [label]);
-      });
-    
-      $('.btn-file :file')
-        .on('fileselect', function(event, label) {
-          let input = $(this)
-            .parents('.input-group')
-            .find(':text')
-          log = label;  
-          if( input.length ) {
-            input.val(log);
-          } else {
-            if( log ) console.log(log);
-          }
-      });
-
-      function readURL(input) {
-        if (input.files && input.files[0]) {
-          let reader = new FileReader();                
-          reader.onload = function (e) {
-            $('#img-upload').attr('src', e.target.result);
-          }
-          reader.readAsDataURL(input.files[0]);
-        }
-      }
-    
-      $("#imgInp")
-        .change(function(){
-          readURL(this)
-        });
     },
 
     updateArticle (article) {
@@ -367,14 +328,15 @@ const app = new Vue ({
           },
         })
         .then(({ data }) => {
-          console.log(data)
           this.articles = this.articles
+            .filter(article => article._id.toString() !== data.article._id.toString());
+          this.articleShow = this.articleShow
             .filter(article => article._id.toString() !== data.article._id.toString());
           this.crudForm.idSelected = null;
           this.getTags();
         })
-        .catch(error => {
-          console.log(error)
+        .catch(({ response }) => {
+          SWAL(response.data.message)
         })
     },
 

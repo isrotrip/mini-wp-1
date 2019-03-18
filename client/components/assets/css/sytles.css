@@ -91,3 +91,133 @@ input[type=submit] {
   border-radius: 5px;
   color: blue
 }
+
+.tag-name {
+  color: grey;
+  padding: 4px;
+  border-radius: 4px; 
+  text-decoration: none !important;
+  margin: 3px !important;
+}
+
+.tag-name:hover {
+  color: black !important;
+}
+
+.hover-btn-danger {
+  background-color: transparent;
+  font-size: 20px;
+  padding: 0 10px;
+}
+
+.hover-btn-primary {
+  background-color: transparent;
+  font-size: 20px;
+  color: black !important;
+  padding: 0 10px;
+}
+
+.hover-btn-warning {
+  background-color: transparent;
+  font-size: 20px;
+  color: black !important;
+  padding: 0 10px;
+}
+
+.hover-btn-peace {
+  background-color: transparent;
+  font-size: 20px;
+  color: black !important;
+  padding: 0 10px;
+}
+
+.hover-btn-warning:hover {
+  border-radius: 5px;
+  background-color: yellow;
+  color: black !important;
+}
+
+.hover-btn-danger:hover {
+  border-radius: 5px;
+  background-color: coral;
+  color: black !important;
+}
+
+.hover-btn-primary:hover {
+  border-radius: 5px;
+  background-color: skyblue;
+  color: black !important;
+}
+
+.hover-btn-peace:hover {
+  border-radius: 5px;
+  background-color: darkorchid;
+  color: black !important;
+}
+
+.background-card {
+  background-color: lightgoldenrodyellow !important;
+  box-shadow: 10px 10px 10px grey;
+  margin-bottom: 10px;
+}
+
+.read-full {
+  background-color: transparent;
+  font-size: 15px !important;
+  cursor: pointer;
+}
+
+.read-full:hover {
+  color: darkblue !important;
+}
+
+.bigger {
+  font-size: 40px !important;
+}
+
+.jumbo {
+  font-size: 60px !important;
+}
+
+.white-font {
+  color: white !important;
+}
+
+.btn-tag {
+  border-color: transparent;
+  color: grey;
+  background-color: transparent;
+  border-radius: 5px;
+  margin-left: 5px;
+  cursor: pointer;
+}
+
+.btn-tag:hover {
+  color: black !important;
+}
+
+.modal-backdrop {
+  z-index: -1;
+}
+
+.black-white-button {
+  border-color: white !important;
+  color: white;
+}
+
+.black-white-button:hover {
+  background: white !important;
+  border-color: white !important;
+  color: black;
+}
+
+.white-black-button {
+  border-color: black !important;
+  color: black;
+}
+
+.white-black-button:hover {
+  background: black !important;
+  border-color: black !important;
+  color: white;
+}

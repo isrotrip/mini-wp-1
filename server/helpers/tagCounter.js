@@ -1,9 +1,6 @@
 const Tag = require('../models/tag');
 
 module.exports = (articleId, added, deleted) => {
-  console.log(articleId, 'artikel')
-  console.log(added, 'added')
-  console.log(deleted, 'delete')
   let promiseTag = [];
   added.forEach(id => {
     promiseTag.push(
@@ -11,7 +8,6 @@ module.exports = (articleId, added, deleted) => {
         Tag
           .findById(id)
           .then(findTag => {
-            console.log(findTag)
             if(findTag){
               findTag.articles.push(articleId)
               findTag.save()

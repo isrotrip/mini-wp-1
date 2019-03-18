@@ -6,7 +6,6 @@ const checkTagChanges = require('../helpers/checkTagChanges');
 class ArticleController {
 
   static create(req, res) {
-    console.log('test')
     if(!req.file) {
       res.status(400).json({
         message: 'Please input the picture'
@@ -16,7 +15,6 @@ class ArticleController {
       let allTags = [];
       let sendTags = [];
       let articleDefault = {};
-      console.log(promiseTags)
       Promise
         .all(promiseTags)
         .then(tags => {
@@ -59,7 +57,6 @@ class ArticleController {
           res.status(201).json(successMessage);
         })
         .catch(error => {
-          console.log(error)
           if(error.message.indexOf('validation') === - 1) {
             let errorMessage = {
               message: 'Internal Server Error',
@@ -151,7 +148,6 @@ class ArticleController {
         })
       })
       .catch(error => {
-        console.log(error)
         res.status(500).json({
           message: error.message
         })
@@ -178,7 +174,6 @@ class ArticleController {
         })
       })
       .catch(error => {
-        console.log(error)
         res.status(500).json({
           message: error.message
         })
